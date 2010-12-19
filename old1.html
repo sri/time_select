@@ -1,0 +1,269 @@
+<script type="text/javascript" src="jquery.js"></script> 
+<style>
+html {
+  margin-left: 150px;
+  margin-top: 40px;
+  background: #f2f2f2;
+}
+.ti {
+  font-size: 80%;
+  color: #666;
+}
+.st {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 84%;
+}
+#a {
+  padding: 10px;
+  background: #fff;
+  border: 1px solid #333;
+  width:100px;
+  text-align: center;
+  cursor: pointer;
+}
+#a:hover {
+  zcolor: #00bb00;
+}
+#b {
+  display: none;
+  height: 250px;
+  overflow-y: auto;
+  margin-top: 15px;
+  margin-bottom: 20px;
+}
+.start {
+  background: #3fbf3f;
+  color: #fff;
+}
+.mark {
+  background:#FFFF99;
+}
+.step {
+  font-size: 88%;
+  padding-left:3px;
+  padding-right: 3px;
+}
+</style>
+<script>
+var start = null;
+var end = null;
+var step = 60;
+
+function on_mouseout(evt) {
+  if (!start && !end) {
+    $(this).css('background', '');
+  }
+}
+
+function on_mouseover(evt) {
+  if (start && end) {
+    return;
+  } else if (!start && !end) {
+    $(this).css('background', '#eee');
+    return;
+  }
+  if (start == $(this).html())
+    return;
+  $(".t").removeClass("mark");
+  var cur = $(this).html();
+  var stop = false;
+  $(".start").nextAll(".t").each(function() {
+    if (!stop)
+      $(this).addClass("mark");
+    if ($(this).html() == cur)
+      stop = true;
+  });
+}
+
+function gen_time_intervals() {
+  $("#b").html('');
+  $(".t").unbind('click');
+  $(".t").unbind('mouseover');
+  $(".t").unbind('mouseout');
+  var pad2 = function(x) { 
+    if (x < 10) x = '0' + x;
+    return x + '';
+  };
+  for (var hr=0; hr <= 23; hr++) {
+    var ampm = "AM";
+    var h = hr;
+    if (h > 12) {
+      ampm = "PM";
+      h -= 12;
+    }
+    if (h == 0)
+      h = 12;
+    for (var min=0; min < 60; min += step) {
+      var t = pad2(h) + ':' + pad2(min) + ' ' + ampm;
+      $("#b").append("<div class='t'>" + t + "</div>");
+    }
+  }
+  $(".t").click(t_click);
+  $(".t").mouseover(on_mouseover);
+  $(".t").mouseout(on_mouseout);
+}
+
+function t_click() {
+  if (!start) {
+    start = $(this).html();
+    $(this).css('background', '');
+    $(this).addClass("start");
+    //$(this).prevAll(".t").hide();//slideUp('fast');
+  } else if (!end) {
+    if ($(this).hasClass("mark"))
+      $(this).removeClass("mark");
+    end = $(this).html();
+    $(this).addClass("start");
+    setTimeout(hide_b, 400);
+  }
+}
+
+function hide_b() {
+  $('#b').hide();
+  start = end = null;
+  $(".t").removeClass("mark");
+  $(".t").removeClass("start");
+  $(".t").unbind('mouseover');
+  $(".t").unbind('mouseout');
+}
+
+function show_b() {
+  $('#b').show();
+  $(".t").show();
+  $(".t").mouseover(on_mouseover);
+  $(".t").mouseout(on_mouseout);
+}
+
+function startup() {
+  $('#a').hover(show_b, hide_b);
+  $(".t").click(t_click);
+  $(".step").hover(
+    function() { 
+      if (!$(this).hasClass("start"))
+        $(this).css("background", "#eee"); 
+    },
+    function() { $(this).css("background", ""); }
+  );
+  $(".step").click(function() {
+    $(this).css("background", "");
+    $(".step").removeClass("start");
+    $(this).addClass("start");
+    start = end = null
+    step = parseInt($(this).html());
+    gen_time_intervals();
+  });
+}
+$(document).ready(startup);
+</script>
+
+<div id="a">
+  <div class="st">availability</div>
+  <div class="ti">Intervals</div>
+  <span class="step" title="Generate Times with 15 minute intervals">15</span>
+  <span class="step" title="Generate Times with 30 minute intervals">30</span>
+  <span class="step" title="Generate Times with 45 minute intervals">45</span>
+  <span class="step start" title="Generate Times with 1 hour intervals">60</span>  
+  <div id="b">
+    <div class='t'>12:00 AM</div>
+    <div class='t'>12:15 AM</div>
+    <div class='t'>12:30 AM</div>
+    <div class='t'>12:45 AM</div>
+    <div class='t'>01:00 AM</div>
+    <div class='t'>01:15 AM</div>
+    <div class='t'>01:30 AM</div>
+    <div class='t'>01:45 AM</div>
+    <div class='t'>02:00 AM</div>
+    <div class='t'>02:15 AM</div>
+    <div class='t'>02:30 AM</div>
+    <div class='t'>02:45 AM</div>
+    <div class='t'>03:00 AM</div>
+    <div class='t'>03:15 AM</div>
+    <div class='t'>03:30 AM</div>
+    <div class='t'>03:45 AM</div>
+    <div class='t'>04:00 AM</div>
+    <div class='t'>04:15 AM</div>
+    <div class='t'>04:30 AM</div>
+    <div class='t'>04:45 AM</div>
+    <div class='t'>05:00 AM</div>
+    <div class='t'>05:15 AM</div>
+    <div class='t'>05:30 AM</div>
+    <div class='t'>05:45 AM</div>
+    <div class='t'>06:00 AM</div>
+    <div class='t'>06:15 AM</div>
+    <div class='t'>06:30 AM</div>
+    <div class='t'>06:45 AM</div>
+    <div class='t'>07:00 AM</div>
+    <div class='t'>07:15 AM</div>
+    <div class='t'>07:30 AM</div>
+    <div class='t'>07:45 AM</div>
+    <div class='t'>08:00 AM</div>
+    <div class='t'>08:15 AM</div>
+    <div class='t'>08:30 AM</div>
+    <div class='t'>08:45 AM</div>
+    <div class='t'>09:00 AM</div>
+    <div class='t'>09:15 AM</div>
+    <div class='t'>09:30 AM</div>
+    <div class='t'>09:45 AM</div>
+    <div class='t'>10:00 AM</div>
+    <div class='t'>10:15 AM</div>
+    <div class='t'>10:30 AM</div>
+    <div class='t'>10:45 AM</div>
+    <div class='t'>11:00 AM</div>
+    <div class='t'>11:15 AM</div>
+    <div class='t'>11:30 AM</div>
+    <div class='t'>11:45 AM</div>
+    <div class='t'>12:00 AM</div>
+    <div class='t'>12:15 AM</div>
+    <div class='t'>12:30 AM</div>
+    <div class='t'>12:45 AM</div>
+    <div class='t'>01:00 PM</div>
+    <div class='t'>01:15 PM</div>
+    <div class='t'>01:30 PM</div>
+    <div class='t'>01:45 PM</div>
+    <div class='t'>02:00 PM</div>
+    <div class='t'>02:15 PM</div>
+    <div class='t'>02:30 PM</div>
+    <div class='t'>02:45 PM</div>
+    <div class='t'>03:00 PM</div>
+    <div class='t'>03:15 PM</div>
+    <div class='t'>03:30 PM</div>
+    <div class='t'>03:45 PM</div>
+    <div class='t'>04:00 PM</div>
+    <div class='t'>04:15 PM</div>
+    <div class='t'>04:30 PM</div>
+    <div class='t'>04:45 PM</div>
+    <div class='t'>05:00 PM</div>
+    <div class='t'>05:15 PM</div>
+    <div class='t'>05:30 PM</div>
+    <div class='t'>05:45 PM</div>
+    <div class='t'>06:00 PM</div>
+    <div class='t'>06:15 PM</div>
+    <div class='t'>06:30 PM</div>
+    <div class='t'>06:45 PM</div>
+    <div class='t'>07:00 PM</div>
+    <div class='t'>07:15 PM</div>
+    <div class='t'>07:30 PM</div>
+    <div class='t'>07:45 PM</div>
+    <div class='t'>08:00 PM</div>
+    <div class='t'>08:15 PM</div>
+    <div class='t'>08:30 PM</div>
+    <div class='t'>08:45 PM</div>
+    <div class='t'>09:00 PM</div>
+    <div class='t'>09:15 PM</div>
+    <div class='t'>09:30 PM</div>
+    <div class='t'>09:45 PM</div>
+    <div class='t'>10:00 PM</div>
+    <div class='t'>10:15 PM</div>
+    <div class='t'>10:30 PM</div>
+    <div class='t'>10:45 PM</div>
+    <div class='t'>11:00 PM</div>
+    <div class='t'>11:15 PM</div>
+    <div class='t'>11:30 PM</div>
+    <div class='t'>11:45 PM</div>
+    <div class='t'>12:00 PM</div>
+    <div class='t'>12:15 PM</div>
+    <div class='t'>12:30 PM</div>
+    <div class='t'>12:45 PM</div>
+   </div>
+</div>

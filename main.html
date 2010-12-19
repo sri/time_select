@@ -1,0 +1,297 @@
+<script type="text/javascript" src="jquery.js"></script> 
+<style>
+html {
+  margin-left: 150px;
+  margin-top: 40px;
+  background: #f2f2f2;
+}
+/* time interval label */
+.ti {
+  font-size: 80%;
+  color: #666;
+}
+/* select time label */
+.st {
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 84%;
+}
+/* intervals */
+.step_sel {
+  background: #3fbf3f;
+  color: #fff;
+}
+.step {
+  font-size: 88%;
+  padding-left:3px;
+  padding-right: 3px;
+}
+/* divs */
+#a {
+  padding: 10px;
+  background: #fff  ;
+  border: 1px solid #333;
+  width:100px;
+  text-align: center;
+  cursor: pointer;
+}
+#a:hover {
+  zcolor: #00bb00;
+}
+#b {
+  display: none;
+  height: 250px;
+  overflow-y: auto;
+  margin-top: 15px;
+  margin-bottom: 20px;
+  background: #fff;
+}
+#done {
+  background: #3fbf3f;
+  color: #fff;
+  padding-left:3px;
+  padding-right:3px;  
+  display:none;
+}
+/* time ranges */
+.start {
+  background: #3fbf3f;
+  color: #fff;
+}
+.end {
+  background: #3fbf3f;
+  color: #fff;
+}
+.highlight {
+  background:#FFFF99;
+}
+.nohighlight {
+  background: #eee;
+}
+</style>
+<script>
+function gen_time_intervals(unbind) {
+  $("#b").html('');
+  $(".t").unbind('click');
+  $(".t").unbind('mouseover');
+  $(".t").unbind('mouseout');
+  var pad2 = function(x) { 
+    if (x < 10) x = '0' + x;
+    return x + '';
+  };
+  var step = parseInt($(".step_sel").html());
+  for (var hr=0; hr <= 23; hr++) {
+    var ampm = "AM";
+    var h = hr;
+    if (h >= 12) {
+      ampm = "PM";
+      if (h > 12) h -= 12;
+    }
+    if (h == 0)
+      h = 12;
+    for (var min=0; min < 60; min += step) {
+      var t = h + ':' + pad2(min) + ' ' + ampm;
+      $("#b").append("<div class='t'>" + t + "</div>");
+    }
+  }
+  $(".t").click(t_click);
+  $(".t").mouseover(on_mouseover);
+  $(".t").mouseout(on_mouseout);
+}
+
+///////////////////////////////////////////////////////////////////////
+//
+function on_mouseout(evt) {
+  if ($(this).hasClass("start") ||
+      $(this).hasClass("end") || 
+      $(this).hasClass("highlight"))
+    return;
+  if (!start && $(this).hasClass("nohighlight"))
+    $(this).removeClass("nohighlight");
+}
+
+var start = null;
+
+function on_mouseover(evt) {
+  // If start_clicked is true, highlight everything
+  // from start to this elt.
+  if ($(this).hasClass("start") ||
+      $(this).hasClass("end") || 
+      (!start && $(this).hasClass("highlight")))
+    return;
+  if (start) {
+    // If Start has been set, we highlight items
+    // from 1 below it till the item under the mouse cursor.
+    // And then Unhighlight any previously highlighted.
+    var cur = $(this).html();
+    var start_highlight = false;
+    var stop_highlight = false;
+    // do the highlight
+    $(".t").each(function() {
+      if (start_highlight && !stop_highlight) {
+        if (!$(this).hasClass("highlight"))
+          $(this).addClass("highlight");
+      }
+      if ($(this).html() == cur)
+        stop_highlight = true;
+      else if ($(this).html() == start)
+        start_highlight = true;
+    });
+    // unhighlight anything previously highlighted,
+    // because the mouse moved up.
+    var stop_unhighlight = false;
+    $(this).nextAll(".t").each(function() {
+      if (stop_unhighlight)
+        return;
+      else if ($(this).hasClass("start") || $(this).hasClass("end"))
+        stop_unhighlight = true;
+      else if ($(this).hasClass("highlight"))
+        $(this).removeClass("highlight");
+      /*else
+        stop_unhighlight = true;*/
+    });
+  } else {
+    // Well, actually a "light" highlight.
+    $(this).addClass("nohighlight");
+  }
+}
+
+function t_click() {
+  if (!start && $(this).hasClass("highlight")) {
+    // Clicked on a previously set time range.
+    // Shift up the end marker.
+    var cur = $(this).html();
+    var found_end = false;
+    $(this).nextAll(".t").each(function() {
+      if ($(this).hasClass("end")) {
+        $(this).removeClass("end");
+        found_end = true;
+      }
+      if (!found_end) {
+        if ($(this).hasClass("highlight"))
+          $(this).removeClass("highlight");
+      }
+    });
+    $(this).removeClass("highlight");
+    $(this).addClass("end");
+  } else if ($(this).hasClass("end")) {
+    // If user Clicks on End, remove it.
+    $(this).removeClass("end");
+    $(this).addClass("highlight");
+    // re-set start
+    $(this).prevAll(".t").each(function() {
+      if (!start && $(this).hasClass("start"))
+        start = $(this).html();
+    });
+  } else if ($(this).hasClass("start")) {
+    // If Clicked on Start, remove it & the
+    // time range it belongs to.
+    $(this).removeClass("start");
+    var stop_removing = false;
+    $(this).nextAll(".t").each(function() {
+      // for saftey
+      if ($(this).hasClass("start"))
+        stop_removing = true;
+      if ($(this).hasClass("highlight") || $(this).hasClass("end"))
+        ;
+      else
+        stop_removing = true;
+      // remove
+      if (!stop_removing) {
+        if ($(this).hasClass("highlight"))
+          $(this).removeClass("highlight");
+        if ($(this).hasClass("end")) {
+          $(this).removeClass("end");
+          stop_removing = true;
+        }
+      }
+    });
+    start = null;
+  } else if (start) {
+    // If a time range has been started,
+    // set and end for it.
+    $(this).removeClass("highlight");
+    $(this).addClass("end");
+    var cur = $(this).html();
+    var start_highlight = false;
+    var stop_highlight = false;
+    $(".t").each(function() {
+      var h = $(this).html();
+      if (start_highlight && !stop_highlight) {
+        if (h != start && h != cur) {
+          if ($(this).hasClass("start"))
+           $(this).removeClass("start");
+          if ($(this).hasClass("end"))
+            $(this).removeClass("end");
+        }
+      }
+      if (h == start)
+        start_highlight = true;
+      else if (h == cur)
+        stop_highlight = true
+    });
+    start = null;
+  } else {
+    $(this).removeClass("nohighlight");
+    $(this).addClass("start");
+    start = $(this).html();
+  }
+}
+
+function hide_b() {
+  $('#b').hide();
+  $(".t").removeClass("highlight");
+  $(".t").removeClass("start");
+  $(".t").unbind('mouseover');
+  $(".t").unbind('mouseout');
+  $("#done").hide();
+}
+
+function show_b() {
+  $('#b').show();
+  $(".t").show();
+  $("#done").show();
+  $(".t").mouseover(on_mouseover);
+  $(".t").mouseout(on_mouseout);
+}
+
+function startup() {
+  // Step
+  $(".step").hover(
+    function() { 
+      if (!$(this).hasClass("step_sel")) 
+        $(this).css("background", "#eee"); 
+    },
+    function() { 
+      if (!$(this).hasClass("step_sel"))
+        $(this).css("background", ""); 
+    }
+  );
+  $(".step").click(function() {
+    $(this).css("background", "");
+    $(".step").removeClass("step_sel");
+    $(this).addClass("step_sel");
+    gen_time_intervals();
+  });
+
+  $("#done").click(hide_b);
+  $("#a").mouseover(show_b);
+  $(".t").click(t_click);
+
+  gen_time_intervals();
+}
+
+$(document).ready(startup);
+</script>
+
+<div id="a">
+  <div class="st">select time</div>
+  <div class="ti">Intervals</div>
+  <span class="step" title="Generate Times with 15 minute intervals">15</span>
+  <span class="step" title="Generate Times with 30 minute intervals">30</span>
+  <span class="step" title="Generate Times with 45 minute intervals">45</span>
+  <span class="step step_sel" title="Generate Times with 1 hour intervals">60</span>  
+  <div id="b">
+  </div>
+  <div id="done">Done</div>
+</div>
